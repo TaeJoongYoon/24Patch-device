@@ -205,6 +205,9 @@ static ble_uuid_t m_adv_uuids[] =                                   /**< Univers
 
 //syl--------------------------------------------------------------------------------
 static const nrf_drv_twi_t m_twi = NRF_DRV_TWI_INSTANCE(TWI_INSTANCE_ID);
+
+static uint8_t m_sample;
+static volatile bool m_xfer_done = false;
 //-----------------------------------------------------------------------------------
 
 /**@brief Callback function for asserts in the SoftDevice.
@@ -993,21 +996,85 @@ static void idle_state_handle(void)
     }
 }
 
+__STATIC_INLINE void data_handler(uint8_t *temp)
+{
+	NRF_LOG_INFO("m_sample: %x", m_sample);
+}
+
+void twi_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
+{
+    switch (p_event->type)
+    {
+        case NRF_DRV_TWI_EVT_DONE:
+            if (p_event->xfer_desc.type == NRF_DRV_TWI_XFER_RX)
+            {
+                data_handler(&m_sample);
+            }
+            m_xfer_done = true;
+            break;
+        default:
+            break;
+    }
+}
+
 void twi_init(void)
 {
+		ret_code_t err_code;
+
+    const nrf_drv_twi_config_t twi_lis2dh_config = {
+       .scl                = 17,
+       .sda                = 13,
+       .frequency          = NRF_DRV_TWI_FREQ_100K,
+       .interrupt_priority = APP_IRQ_PRIORITY_LOWEST,
+       .clear_bus_init     = false
+    };
+
+    err_code = nrf_drv_twi_init(&m_twi, &twi_lis2dh_config, twi_handler, NULL);
+    APP_ERROR_CHECK(err_code);
+
+    nrf_drv_twi_enable(&m_twi);
+}
+
+static bool writeRegister(uint8_t regNumber, uint8_t value){
+		uint8_t valueBuffer[2];
+		valueBuffer[0] = regNumber;
+		valueBuffer[1] = value;
+		//int32_t toSend = (int32_t)value;
+		uint32_t err_code = nrf_drv_twi_tx(&m_twi, LIS2DH_ADDR, valueBuffer, sizeof(valueBuffer), false);
+		nrf_delay_ms(100);
+		return true;
+}
+
+static uint8_t readRegister(uint8_t regNumber){
+		m_xfer_done = false;
 	
+		//uint8_t resultsWhoAmI;
+		uint8_t whoAmIPointer = regNumber;
+		nrf_drv_twi_tx(&m_twi, LIS2DH_ADDR, &whoAmIPointer, 1, true);
+		nrf_delay_ms(100);
+		nrf_drv_twi_rx(&m_twi, LIS2DH_ADDR, &m_sample, 1);
+		nrf_delay_ms(100);
+		NRF_LOG_INFO("TWI 0x%x: 0x%x.", regNumber, m_sample);
+		return m_sample;
 }
 
 void lis2dh_init(void)
 {
-	
+		//Set low power, Enable XYZ
+		//writeRegister(CTRL_REG1, 0x07);
+		//writeRegister(CTRL_REG1, 0x07);
+		
+		readRegister(WHO_AM_I);
+		//readRegister(0xFF);
 }
 
 void read_data(void)
 {
-	
-}
+		m_xfer_done = false;
 
+    ret_code_t err_code = nrf_drv_twi_rx(&m_twi, LIS2DH_ADDR, &m_sample, 1);
+    APP_ERROR_CHECK(err_code);
+}
 
 /**@brief Function for application main entry.
  */
@@ -1034,7 +1101,7 @@ int main(void)
     peer_manager_init();
 
     // Start execution.
-    NRF_LOG_INFO("Heart Rate Sensor example started.");
+    NRF_LOG_INFO("LIS2DH test.");
     application_timers_start();
     advertising_start(erase_bonds);
 
@@ -1049,7 +1116,6 @@ int main(void)
 				}while (m_xfer_done == false);
 				
 				read_data();
-				//read_max_data();
 				
         NRF_LOG_FLUSH();
     }
