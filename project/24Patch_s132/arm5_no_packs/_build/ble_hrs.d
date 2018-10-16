@@ -1,4 +1,4 @@
-.\_build\ble_hrs.o: ..\..\..\nRF5_SDK_15.2\components\ble\ble_services\ble_hrs\ble_hrs.c
+.\_build\ble_hrs.o: ..\..\..\source\ble_services\ble_hrs.c
 .\_build\ble_hrs.o: ..\..\..\nRF5_SDK_15.2\components\libraries\util\sdk_common.h
 .\_build\ble_hrs.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 .\_build\ble_hrs.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
@@ -24,7 +24,7 @@
 .\_build\ble_hrs.o: ..\..\..\nRF5_SDK_15.2\modules\nrfx\mdk\nrf52_name_change.h
 .\_build\ble_hrs.o: ..\..\..\nRF5_SDK_15.2\components\libraries\util\sdk_macros.h
 .\_build\ble_hrs.o: ..\..\..\nRF5_SDK_15.2\components\libraries\util\nrf_assert.h
-.\_build\ble_hrs.o: ..\..\..\nRF5_SDK_15.2\components\ble\ble_services\ble_hrs\ble_hrs.h
+.\_build\ble_hrs.o: ..\..\..\include\ble_services\ble_hrs.h
 .\_build\ble_hrs.o: ..\..\..\nRF5_SDK_15.2\components\softdevice\s132\headers\ble.h
 .\_build\ble_hrs.o: ..\..\..\nRF5_SDK_15.2\components\softdevice\s132\headers\nrf_svc.h
 .\_build\ble_hrs.o: ..\..\..\nRF5_SDK_15.2\components\softdevice\s132\headers\ble_err.h

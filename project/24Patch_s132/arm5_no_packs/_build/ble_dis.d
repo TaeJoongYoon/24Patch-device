@@ -1,4 +1,4 @@
-.\_build\ble_dis.o: ..\..\..\nRF5_SDK_15.2\components\ble\ble_services\ble_dis\ble_dis.c
+.\_build\ble_dis.o: ..\..\..\source\ble_services\ble_dis.c
 .\_build\ble_dis.o: ..\..\..\nRF5_SDK_15.2\components\libraries\util\sdk_common.h
 .\_build\ble_dis.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 .\_build\ble_dis.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
@@ -24,7 +24,7 @@
 .\_build\ble_dis.o: ..\..\..\nRF5_SDK_15.2\modules\nrfx\mdk\nrf52_name_change.h
 .\_build\ble_dis.o: ..\..\..\nRF5_SDK_15.2\components\libraries\util\sdk_macros.h
 .\_build\ble_dis.o: ..\..\..\nRF5_SDK_15.2\components\libraries\util\nrf_assert.h
-.\_build\ble_dis.o: ..\..\..\nRF5_SDK_15.2\components\ble\ble_services\ble_dis\ble_dis.h
+.\_build\ble_dis.o: ..\..\..\include\ble_services\ble_dis.h
 .\_build\ble_dis.o: ..\..\..\nRF5_SDK_15.2\components\ble\common\ble_srv_common.h
 .\_build\ble_dis.o: ..\..\..\nRF5_SDK_15.2\components\softdevice\s132\headers\ble_types.h
 .\_build\ble_dis.o: ..\..\..\nRF5_SDK_15.2\components\softdevice\s132\headers\ble.h

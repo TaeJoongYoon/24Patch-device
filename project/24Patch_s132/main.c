@@ -967,7 +967,7 @@ int main(void)
     peer_manager_init();
 
     // Start execution.
-    NRF_LOG_INFO("Heart Rate Sensor example started.");
+    NRF_LOG_INFO("24Patch v1.0.0 started.");
     application_timers_start();
     advertising_start(erase_bonds);
 

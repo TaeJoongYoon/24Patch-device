@@ -45,13 +45,13 @@
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\util\sdk_macros.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\util\nrf_assert.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\ble\ble_advertising\ble_advertising.h
-.\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\ble\ble_services\ble_bas\ble_bas.h
+.\_build\main.o: ..\..\..\include\ble_services\ble_bas.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\softdevice\common\nrf_sdh_ble.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\experimental_section_vars\nrf_section_iter.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\experimental_section_vars\nrf_section.h
-.\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\ble\ble_services\ble_hrs\ble_hrs.h
+.\_build\main.o: ..\..\..\include\ble_services\ble_hrs.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\ble\nrf_ble_gatt\nrf_ble_gatt.h
-.\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\ble\ble_services\ble_dis\ble_dis.h
+.\_build\main.o: ..\..\..\include\ble_services\ble_dis.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\ble\common\ble_conn_params.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\sensorsim\sensorsim.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\softdevice\common\nrf_sdh.h
