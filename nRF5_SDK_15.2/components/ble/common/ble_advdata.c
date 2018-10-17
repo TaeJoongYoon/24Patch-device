@@ -41,6 +41,7 @@
 #include "ble_gap.h"
 #include "ble_srv_common.h"
 #include "sdk_common.h"
+#include "nrf_log.h"
 
 // NOTE: For now, Security Manager Out of Band Flags (OOB) are omitted from the advertising data.
 
@@ -329,7 +330,7 @@ static ret_code_t uuid_list_encode(const ble_advdata_uuid_list_t * p_uuid_list,
                                       p_offset,
                                       max_size);
     VERIFY_SUCCESS(err_code);
-
+									  
     // Encode 128 bit UUIDs.
     err_code = uuid_list_sized_encode(p_uuid_list,
                                       adv_type_128,
@@ -337,8 +338,8 @@ static ret_code_t uuid_list_encode(const ble_advdata_uuid_list_t * p_uuid_list,
                                       p_encoded_data,
                                       p_offset,
                                       max_size);
+	NRF_LOG_INFO("---------------------%d", err_code);
     VERIFY_SUCCESS(err_code);
-
     return NRF_SUCCESS;
 }
 
@@ -520,7 +521,7 @@ ret_code_t ble_advdata_encode(ble_advdata_t const * const p_advdata,
         err_code = ble_device_addr_encode(p_encoded_data, p_len, max_size);
         VERIFY_SUCCESS(err_code);
     }
-
+	
     // Encode appearance.
     if (p_advdata->include_appearance)
     {

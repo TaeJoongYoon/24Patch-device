@@ -22,16 +22,21 @@ Dialog DLL:      TCM.DLL V1.36.1.0
  
 <h2>Project:</h2>
 C:\Users\hihi4\Documents\24Patch-device\project\24Patch_s132\arm5_no_packs\ble_app_hrs_pca10040_s132.uvprojx
-Project File Date:  10/17/2018
+Project File Date:  10/18/2018
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 6 (build 750)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'nrf52832_xxaa'
-compiling ble_ppg.c...
+compiling ble_advertising.c...
+compiling ble_advdata.c...
+compiling main.c...
+..\main.c(498): warning:  #177-D: variable "err_code"  was declared but never referenced
+      ret_code_t err_code;
+..\main.c: 1 warning, 0 errors
 linking...
-Program Size: Code=58092 RO-data=19396 RW-data=516 ZI-data=13788  
+Program Size: Code=58780 RO-data=19420 RW-data=520 ZI-data=13824  
 FromELF: creating hex file...
-".\_build\release_v1_0_0.axf" - 0 Error(s), 0 Warning(s).
+".\_build\release_v1_0_0.axf" - 0 Error(s), 1 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -57,10 +62,10 @@ Package Vendor: NordicSemiconductor
    * Component: ARM::CMSIS:CORE:4.3.0
 
    * Component: NordicSemiconductor::Device:Startup:8.17.0
+      Source file:   Device\Source\arm\arm_startup_nrf52.s
       Source file:   Device\Source\system_nrf52.c
       Include file:  Device\Include\system_nrf52.h
-      Source file:   Device\Source\arm\arm_startup_nrf52.s
-Build Time Elapsed:  00:00:04
+Build Time Elapsed:  00:00:07
 </pre>
 </body>
 </html>

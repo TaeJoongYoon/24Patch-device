@@ -58,9 +58,6 @@
 #include "ble_srv_common.h"
 #include "ble_advdata.h"
 #include "ble_advertising.h"
-#include "ble_bas.h"
-#include "ble_hrs.h"
-#include "ble_dis.h"
 #include "ble_conn_params.h"
 #include "sensorsim.h"
 #include "nrf_sdh.h"
@@ -83,9 +80,10 @@
 
 //include ppg service 
 #include "ble_ppg.h"
+#include "ble_hr.h"
 
 
-#define DEVICE_NAME                         "24Patch"                            /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                         "24"                            /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME                   "Signalus"                   /**< Manufacturer. Will be passed to Device Information Service. */
 #define APP_ADV_INTERVAL                    300                                     /**< The advertising interval (in units of 0.625 ms. This value corresponds to 187.5 ms). */
 
@@ -93,7 +91,8 @@
 #define APP_BLE_CONN_CFG_TAG                1                                       /**< A tag identifying the SoftDevice BLE configuration. */
 #define APP_BLE_OBSERVER_PRIO               3                                       /**< Application's BLE observer priority. You shouldn't need to modify this value. */
 
-#define NOTIFICATION_INTERVAL           	APP_TIMER_TICKS(1000)
+#define PPG_NOTIFICATION_INTERVAL          	APP_TIMER_TICKS(1000)
+#define HR_NOTIFICATION_INTERVAL           	APP_TIMER_TICKS(1000)
 
 #define MIN_CONN_INTERVAL                   MSEC_TO_UNITS(400, UNIT_1_25_MS)        /**< Minimum acceptable connection interval (0.4 seconds). */
 #define MAX_CONN_INTERVAL                   MSEC_TO_UNITS(650, UNIT_1_25_MS)        /**< Maximum acceptable connection interval (0.65 second). */
@@ -117,23 +116,27 @@
 
 #define DEAD_BEEF                           0xDEADBEEF                              /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
-//define ppg service instance
+//define service instance
 BLE_PPG_DEF(m_ppg);
+BLE_HR_DEF(m_hr);
 
 NRF_BLE_GATT_DEF(m_gatt);                                           /**< GATT module instance. */
 NRF_BLE_QWR_DEF(m_qwr);                                             /**< Context for the Queued Write module.*/
 BLE_ADVERTISING_DEF(m_advertising);                                 /**< Advertising module instance. */
 
-APP_TIMER_DEF(m_notification_timer_id);
+APP_TIMER_DEF(m_ppg_notification_timer_id);
+APP_TIMER_DEF(m_hr_notification_timer_id);
 
 static uint16_t m_conn_handle         = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 
 static ble_uuid_t m_adv_uuids[] =                                   /**< Universally unique service identifiers. */
 {
-	{PPG_SERVICE_UUID,						BLE_UUID_TYPE_VENDOR_BEGIN}
+	{PPG_SERVICE_UUID,						BLE_UUID_TYPE_VENDOR_BEGIN},
+	{HR_SERVICE_UUID,						BLE_UUID_TYPE_VENDOR_BEGIN}
 };
 
 static uint8_t m_ppg_value = 0;
+static uint8_t m_hr_value = 0;
 
 static void on_ppg_evt(ble_ppg_t     * p_ppg_service,
                        ble_ppg_evt_t * p_evt)
@@ -143,12 +146,12 @@ static void on_ppg_evt(ble_ppg_t     * p_ppg_service,
     switch(p_evt->evt_type)
     {
 		case BLE_PPG_EVT_NOTIFICATION_ENABLED:
-			err_code = app_timer_start(m_notification_timer_id, NOTIFICATION_INTERVAL, NULL);
+			err_code = app_timer_start(m_ppg_notification_timer_id, PPG_NOTIFICATION_INTERVAL, NULL);
 			APP_ERROR_CHECK(err_code);
             break;
 
         case BLE_PPG_EVT_NOTIFICATION_DISABLED:
-			err_code = app_timer_stop(m_notification_timer_id);
+			err_code = app_timer_stop(m_ppg_notification_timer_id);
 			APP_ERROR_CHECK(err_code);
             break;
 		
@@ -164,7 +167,36 @@ static void on_ppg_evt(ble_ppg_t     * p_ppg_service,
     }
 }
 
-static void notification_timeout_handler(void * p_context)
+static void on_hr_evt(ble_hr_t     * p_hr_service,
+                       ble_hr_evt_t * p_evt)
+{
+	ret_code_t err_code;
+	
+    switch(p_evt->evt_type)
+    {
+		case BLE_HR_EVT_NOTIFICATION_ENABLED:
+			err_code = app_timer_start(m_hr_notification_timer_id, HR_NOTIFICATION_INTERVAL, NULL);
+			APP_ERROR_CHECK(err_code);
+            break;
+
+        case BLE_HR_EVT_NOTIFICATION_DISABLED:
+			err_code = app_timer_stop(m_hr_notification_timer_id);
+			APP_ERROR_CHECK(err_code);
+            break;
+		
+        case BLE_HR_EVT_CONNECTED:
+            break;
+
+        case BLE_HR_EVT_DISCONNECTED:
+			break;
+
+        default:
+			// No implementation needed.
+			break;
+    }
+}
+
+static void ppg_notification_timeout_handler(void * p_context)
 {
     UNUSED_PARAMETER(p_context);
     ret_code_t err_code;
@@ -173,6 +205,18 @@ static void notification_timeout_handler(void * p_context)
     m_ppg_value++;
     
     err_code = ble_ppg_ppg_value_update(&m_ppg, m_ppg_value);
+    APP_ERROR_CHECK(err_code);
+}
+
+static void hr_notification_timeout_handler(void * p_context)
+{
+    UNUSED_PARAMETER(p_context);
+    ret_code_t err_code;
+    
+    // Increment the value of m_custom_value before nortifing it.
+    m_hr_value++;
+    
+    err_code = ble_hr_hr_value_update(&m_hr, m_hr_value);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -258,7 +302,10 @@ static void timers_init(void)
     err_code = app_timer_init();
     APP_ERROR_CHECK(err_code);
 	
-	err_code = app_timer_create(&m_notification_timer_id, APP_TIMER_MODE_REPEATED, notification_timeout_handler);
+	err_code = app_timer_create(&m_ppg_notification_timer_id, APP_TIMER_MODE_REPEATED, ppg_notification_timeout_handler);
+    APP_ERROR_CHECK(err_code);
+	
+	err_code = app_timer_create(&m_hr_notification_timer_id, APP_TIMER_MODE_REPEATED, hr_notification_timeout_handler);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -338,6 +385,16 @@ static void services_init(void)
 	
 	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&ppg_init.ppg_value_char_attr_md.read_perm);
 	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&ppg_init.ppg_value_char_attr_md.write_perm);
+	
+	// Initialize HR Service.
+	ble_hr_init_t		hr_init = {0};//Initialize the hr services
+	memset(&hr_init, 0, sizeof(hr_init));
+	hr_init.evt_handler = on_hr_evt;
+	err_code = ble_hr_init(&m_hr, &hr_init);
+    APP_ERROR_CHECK(err_code);
+	
+	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&hr_init.hr_value_char_attr_md.read_perm);
+	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&hr_init.hr_value_char_attr_md.write_perm);
 }
 
 /**@brief Function for starting application timers.
@@ -601,22 +658,23 @@ static void peer_manager_init(void)
 /**@brief Function for initializing the Advertising functionality.
  */
 static void advertising_init(void)
-{
+{	
     ret_code_t             err_code;
     ble_advertising_init_t init;
 
     memset(&init, 0, sizeof(init));
 
     init.advdata.name_type               = BLE_ADVDATA_FULL_NAME;
-    init.advdata.include_appearance      = true;
-    init.advdata.flags                   = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
-    init.advdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
-    init.advdata.uuids_complete.p_uuids  = m_adv_uuids;
-
+    init.advdata.include_appearance      = false;
+    init.advdata.flags                   = BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE;
+//    init.advdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
+//    init.advdata.uuids_complete.p_uuids  = m_adv_uuids;
+	init.srdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
+    init.srdata.uuids_complete.p_uuids  = m_adv_uuids;
+	
     init.config.ble_adv_fast_enabled  = true;
     init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
     init.config.ble_adv_fast_timeout  = APP_ADV_DURATION;
-
     init.evt_handler = on_adv_evt;
 
     err_code = ble_advertising_init(&m_advertising, &init);

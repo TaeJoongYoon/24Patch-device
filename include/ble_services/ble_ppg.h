@@ -12,8 +12,7 @@
 
 #define PPG_SERVICE_UUID		0x1400
 #define PPG_RAW_CHAR_UUID		0x1401
-#define PPG_HRS_CHAR_UUID		0x1402
-#define PPG_SPO2_CHAR_UUID		0x1403
+
 
 #define BLE_PPG_DEF(_name)                                                                          \
 static ble_ppg_t _name;                                                                             \
@@ -50,8 +49,6 @@ struct ble_ppg_s
 	ble_ppg_evt_handler_t         evt_handler;
     uint16_t                      service_handle;                 /**< Handle of ppg Service (as provided by the BLE stack). */
     ble_gatts_char_handles_t      ppg_raw_handles;           /**< Handles related to the ppg Value characteristic. */
-	ble_gatts_char_handles_t      ppg_hrs_handles;           
-	ble_gatts_char_handles_t      ppg_spo2_handles;           
     uint16_t                      conn_handle;                    /**< Handle of the current connection (as provided by the BLE stack, is BLE_CONN_HANDLE_INVALID if not in a connection). */
     uint8_t                       uuid_type; 
 };

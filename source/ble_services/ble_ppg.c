@@ -190,20 +190,7 @@ static uint32_t ppg_value_char_add(ble_ppg_t * p_ppg, const ble_ppg_init_t * p_p
 	err_code = sd_ble_gatts_characteristic_add(p_ppg->service_handle, &char_md,
                                                &attr_char_value,
                                                &p_ppg->ppg_raw_handles);
-	
-	char_md.char_props.read   = 0;
-    char_md.char_props.write  = 0;
-    char_md.char_props.notify = 1; 
-	err_code = sd_ble_gatts_characteristic_add(p_ppg->service_handle, &char_md,
-                                               &attr_char_value,
-                                               &p_ppg->ppg_hrs_handles);
-	
-	char_md.char_props.read   = 0;
-    char_md.char_props.write  = 0;
-    char_md.char_props.notify = 1; 	
-	err_code = sd_ble_gatts_characteristic_add(p_ppg->service_handle, &char_md,
-                                               &attr_char_value,
-                                               &p_ppg->ppg_spo2_handles);
+											   
     if (err_code != NRF_SUCCESS)
     {
         return err_code;

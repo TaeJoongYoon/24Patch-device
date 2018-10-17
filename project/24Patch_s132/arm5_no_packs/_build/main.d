@@ -45,16 +45,12 @@
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\util\sdk_macros.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\util\nrf_assert.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\ble\ble_advertising\ble_advertising.h
-.\_build\main.o: ..\..\..\include\ble_services\ble_bas.h
-.\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\softdevice\common\nrf_sdh_ble.h
-.\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\experimental_section_vars\nrf_section_iter.h
-.\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\experimental_section_vars\nrf_section.h
-.\_build\main.o: ..\..\..\include\ble_services\ble_hrs.h
-.\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\ble\nrf_ble_gatt\nrf_ble_gatt.h
-.\_build\main.o: ..\..\..\include\ble_services\ble_dis.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\ble\common\ble_conn_params.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\sensorsim\sensorsim.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\softdevice\common\nrf_sdh.h
+.\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\experimental_section_vars\nrf_section_iter.h
+.\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\experimental_section_vars\nrf_section.h
+.\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\softdevice\common\nrf_sdh_ble.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\softdevice\common\nrf_sdh_soc.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\timer\app_timer.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\bsp\bsp_btn_ble.h
@@ -85,6 +81,7 @@
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\ble\peer_manager\peer_manager_internal.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\ble\peer_manager\peer_manager_handler.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\fds\fds.h
+.\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\ble\nrf_ble_gatt\nrf_ble_gatt.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\ble\peer_manager\nrf_ble_lesc.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\ble\nrf_ble_qwr\nrf_ble_qwr.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\ble\common\ble_conn_state.h
@@ -103,3 +100,4 @@
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\balloc\nrf_balloc.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\log\nrf_log_default_backends.h
 .\_build\main.o: ..\..\..\include\ble_services\ble_ppg.h
+.\_build\main.o: ..\..\..\include\ble_services\ble_hr.h

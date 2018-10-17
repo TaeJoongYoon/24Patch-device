@@ -37,3 +37,9 @@
 .\_build\ble_advdata.o: ..\..\..\nRF5_SDK_15.2\components\libraries\util\sdk_macros.h
 .\_build\ble_advdata.o: ..\..\..\nRF5_SDK_15.2\components\libraries\util\nrf_assert.h
 .\_build\ble_advdata.o: ..\..\..\nRF5_SDK_15.2\components\ble\common\ble_srv_common.h
+.\_build\ble_advdata.o: ..\..\..\nRF5_SDK_15.2\components\libraries\log\nrf_log.h
+.\_build\ble_advdata.o: ..\..\..\nRF5_SDK_15.2\components\libraries\experimental_section_vars\nrf_section.h
+.\_build\ble_advdata.o: ..\..\..\nRF5_SDK_15.2\components\libraries\strerror\nrf_strerror.h
+.\_build\ble_advdata.o: ..\..\..\nRF5_SDK_15.2\components\libraries\log\src\nrf_log_internal.h
+.\_build\ble_advdata.o: ..\..\..\nRF5_SDK_15.2\components\libraries\log\nrf_log_instance.h
+.\_build\ble_advdata.o: ..\..\..\nRF5_SDK_15.2\components\libraries\log\nrf_log_types.h
