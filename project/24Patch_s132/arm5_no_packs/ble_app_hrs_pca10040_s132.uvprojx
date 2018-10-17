@@ -299,8 +299,8 @@
               </OCR_RVCT8>
               <OCR_RVCT9>
                 <Type>0</Type>
-                <StartAddress>0x20002b90</StartAddress>
-                <Size>0xd470</Size>
+                <StartAddress>0x20002ba8</StartAddress>
+                <Size>0xd458</Size>
               </OCR_RVCT9>
               <OCR_RVCT10>
                 <Type>0</Type>
@@ -1933,6 +1933,11 @@
                   </Cads>
                 </FileArmAds>
               </FileOption>
+            </File>
+            <File>
+              <FileName>ble_ppg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\source\ble_services\ble_ppg.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -8346,6 +8351,11 @@
                   </Cads>
                 </FileArmAds>
               </FileOption>
+            </File>
+            <File>
+              <FileName>ble_ppg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\source\ble_services\ble_ppg.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -102,3 +102,4 @@
 .\_build\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\balloc\nrf_balloc.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\log\nrf_log_default_backends.h
+.\_build\main.o: ..\..\..\include\ble_services\ble_ppg.h
