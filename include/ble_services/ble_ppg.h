@@ -20,13 +20,17 @@ static ble_ppg_t _name;                                                         
 NRF_SDH_BLE_OBSERVER(_name ## _obs,                                                                 \
                      BLE_HRS_BLE_OBSERVER_PRIO,                                                     \
                      ble_ppg_on_ble_evt, &_name)
-
+										  
 typedef struct ble_ppg_s ble_ppg_t;		
 
 typedef enum
 {
-	BLE_PPG_EVT_NOTIFICATION_ENABLED,                             /**< Custom value notification enabled event. */
-    BLE_PPG_EVT_NOTIFICATION_DISABLED,                            /**< Custom value notification disabled event. */
+	BLE_PPG_RAW_EVT_NOTI_ENABLED,                             /**< Custom value notification enabled event. */
+    BLE_PPG_RAW_EVT_NOTI_DISABLED,                            /**< Custom value notification disabled event. */
+	BLE_PPG_HRS_EVT_NOTI_ENABLED,                             /**< Custom value notification enabled event. */
+    BLE_PPG_HRS_EVT_NOTI_DISABLED,                            /**< Custom value notification disabled event. */
+	BLE_PPG_SPO2_EVT_NOTI_ENABLED,                             /**< Custom value notification enabled event. */
+    BLE_PPG_SPO2_EVT_NOTI_DISABLED,                            /**< Custom value notification disabled event. */
     BLE_PPG_EVT_DISCONNECTED,
     BLE_PPG_EVT_CONNECTED
 } ble_ppg_evt_type_t;
@@ -60,4 +64,6 @@ uint32_t ble_ppg_init(ble_ppg_t * p_ppg, const ble_ppg_init_t * p_ppg_init);
 
 void ble_ppg_on_ble_evt( ble_evt_t const * p_ble_evt, void * p_context);
 
-uint32_t ble_ppg_ppg_value_update(ble_ppg_t * p_ppg, uint8_t ppg_value);
+uint32_t ble_ppg_raw_update(ble_ppg_t * p_ppg, uint8_t ppg_raw);
+uint32_t ble_ppg_hrs_update(ble_ppg_t * p_ppg, uint8_t ppg_hrs);
+uint32_t ble_ppg_spo2_update(ble_ppg_t * p_ppg, uint8_t ppg_spo2);
