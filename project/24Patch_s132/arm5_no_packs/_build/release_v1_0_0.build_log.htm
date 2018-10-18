@@ -22,16 +22,47 @@ Dialog DLL:      TCM.DLL V1.36.1.0
  
 <h2>Project:</h2>
 C:\Users\hihi4\Documents\24Patch-device\project\24Patch_s132\arm5_no_packs\ble_app_hrs_pca10040_s132.uvprojx
-Project File Date:  10/17/2018
+Project File Date:  10/18/2018
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 6 (build 750)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'nrf52832_xxaa'
 compiling ble_ppg.c...
+..\..\..\source\ble_services\ble_ppg.c(253): warning:  #177-D: variable "ppg_hrs_char_md"  was declared but never referenced
+  	ble_gatts_char_md_t ppg_hrs_char_md;
+..\..\..\source\ble_services\ble_ppg.c(254): warning:  #177-D: variable "ppg_spo2_char_md"  was declared but never referenced
+  	ble_gatts_char_md_t ppg_spo2_char_md;
+..\..\..\source\ble_services\ble_ppg.c(256): warning:  #177-D: variable "ppg_hrs_cccd_md"  was declared but never referenced
+  	ble_gatts_attr_md_t ppg_hrs_cccd_md;
+..\..\..\source\ble_services\ble_ppg.c(257): warning:  #177-D: variable "ppg_spo2_cccd_md"  was declared but never referenced
+  	ble_gatts_attr_md_t ppg_spo2_cccd_md;
+..\..\..\source\ble_services\ble_ppg.c(259): warning:  #177-D: variable "attr_char_ppg_hrs"  was declared but never referenced
+  	ble_gatts_attr_t    attr_char_ppg_hrs;
+..\..\..\source\ble_services\ble_ppg.c(260): warning:  #177-D: variable "attr_char_ppg_spo2"  was declared but never referenced
+  	ble_gatts_attr_t    attr_char_ppg_spo2;
+..\..\..\source\ble_services\ble_ppg.c: 6 warnings, 0 errors
+compiling main.c...
+..\main.c(576): warning:  #177-D: variable "err_code"  was declared but never referenced
+      ret_code_t err_code;
+..\main.c(1010): warning:  #111-D: statement is unreachable
+  	maxim_heart_rate_and_oxygen_saturation(irBuffer, bufferLength, redBuffer, &spo2, &validSPO2, &heartRate, &validHeartRate);
+..\main.c(197): warning:  #177-D: variable "rates"  was declared but never referenced
+  static uint8_t rates[RATE_SIZE]; //Array of heart rates
+..\main.c(198): warning:  #177-D: variable "rateSpot"  was declared but never referenced
+  static uint8_t rateSpot = 0;
+..\main.c(199): warning:  #177-D: variable "lastBeat"  was declared but never referenced
+  static uint32_t lastBeat = 0; //Time at which the last beat occurred
+..\main.c(200): warning:  #177-D: variable "beatsPerMinute"  was declared but never referenced
+  static float beatsPerMinute;
+..\main.c(201): warning:  #177-D: variable "beatAvg"  was declared but never referenced
+  static int beatAvg;
+..\main.c(202): warning:  #177-D: variable "dataPPG_test"  was declared but never referenced
+  static uint16_t dataPPG_test[7] = {117, 111, 278, 248, 184, 97, 92};
+..\main.c: 8 warnings, 0 errors
 linking...
-Program Size: Code=58752 RO-data=19408 RW-data=520 ZI-data=13856  
+Program Size: Code=61936 RO-data=19504 RW-data=572 ZI-data=14716  
 FromELF: creating hex file...
-".\_build\release_v1_0_0.axf" - 0 Error(s), 0 Warning(s).
+".\_build\release_v1_0_0.axf" - 0 Error(s), 14 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -57,10 +88,10 @@ Package Vendor: NordicSemiconductor
    * Component: ARM::CMSIS:CORE:4.3.0
 
    * Component: NordicSemiconductor::Device:Startup:8.17.0
+      Source file:   Device\Source\arm\arm_startup_nrf52.s
       Source file:   Device\Source\system_nrf52.c
       Include file:  Device\Include\system_nrf52.h
-      Source file:   Device\Source\arm\arm_startup_nrf52.s
-Build Time Elapsed:  00:00:04
+Build Time Elapsed:  00:00:06
 </pre>
 </body>
 </html>

@@ -103,3 +103,11 @@
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\balloc\nrf_balloc.h
 .\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\log\nrf_log_default_backends.h
 .\_build\main.o: ..\..\..\include\ble_services\ble_ppg.h
+.\_build\main.o: ..\..\..\nRF5_SDK_15.2\integration\nrfx\legacy\nrf_drv_twi.h
+.\_build\main.o: ..\..\..\nRF5_SDK_15.2\modules\nrfx\drivers\include\nrfx_twim.h
+.\_build\main.o: ..\..\..\nRF5_SDK_15.2\modules\nrfx\hal/nrf_twim.h
+.\_build\main.o: ..\..\..\nRF5_SDK_15.2\modules\nrfx\drivers\include\nrfx_twi.h
+.\_build\main.o: ..\..\..\nRF5_SDK_15.2\modules\nrfx\hal/nrf_twi.h
+.\_build\main.o: ..\..\..\nRF5_SDK_15.2\components\libraries\delay\nrf_delay.h
+.\_build\main.o: ..\..\..\include\drivers\heartRate.h
+.\_build\main.o: ..\..\..\include\drivers\spo2_algorithm.h

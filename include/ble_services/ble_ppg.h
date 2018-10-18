@@ -55,15 +55,17 @@ struct ble_ppg_s
     uint16_t                      service_handle;                 /**< Handle of ppg Service (as provided by the BLE stack). */
     ble_gatts_char_handles_t      ppg_raw_handles;           /**< Handles related to the ppg Value characteristic. */
 	ble_gatts_char_handles_t      ppg_hrs_handles;           
-	ble_gatts_char_handles_t      ppg_spo2_handles;           
+	ble_gatts_char_handles_t      ppg_spo2_handles;     
     uint16_t                      conn_handle;                    /**< Handle of the current connection (as provided by the BLE stack, is BLE_CONN_HANDLE_INVALID if not in a connection). */
     uint8_t                       uuid_type; 
 };
+
+
 
 uint32_t ble_ppg_init(ble_ppg_t * p_ppg, const ble_ppg_init_t * p_ppg_init);
 
 void ble_ppg_on_ble_evt( ble_evt_t const * p_ble_evt, void * p_context);
 
-uint32_t ble_ppg_raw_update(ble_ppg_t * p_ppg, uint8_t ppg_raw);
+uint32_t ble_ppg_raw_update(ble_ppg_t * p_ppg, uint32_t ppg_raw);
 uint32_t ble_ppg_hrs_update(ble_ppg_t * p_ppg, uint8_t ppg_hrs);
 uint32_t ble_ppg_spo2_update(ble_ppg_t * p_ppg, uint8_t ppg_spo2);

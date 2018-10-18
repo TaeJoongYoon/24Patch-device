@@ -89,30 +89,38 @@ void ble_ppg_on_ble_evt( ble_evt_t const * p_ble_evt, void * p_context)
 }
 
 
-uint32_t ble_ppg_raw_update(ble_ppg_t * p_ppg, uint8_t ppg_value){
+uint32_t ble_ppg_raw_update(ble_ppg_t * p_ppg, uint32_t ppg_value)
+{
     if (p_ppg == NULL)
     {
         return NRF_ERROR_NULL;
     }
 	
 	uint32_t err_code = NRF_SUCCESS;
-	ble_gatts_value_t gatts_value;
+	
+	ble_gatts_value_t	gatts_value;
+	uint8_t				encoded_hrm[4];
+	encoded_hrm[3] = (uint8_t) ((ppg_value & 0x000000FF) >> 0);
+	encoded_hrm[2] = (uint8_t) ((ppg_value & 0x0000FF00) >> 8);
+	encoded_hrm[1] = (uint8_t) ((ppg_value & 0x00FF0000) >> 16);
+	encoded_hrm[0] = (uint8_t) ((ppg_value & 0xFF000000) >> 24);
 
 	// Initialize value struct.
 	memset(&gatts_value, 0, sizeof(gatts_value));
 
-	gatts_value.len     = sizeof(uint8_t);
+	gatts_value.len     = sizeof(uint32_t);
 	gatts_value.offset  = 0;
-	gatts_value.p_value = &ppg_value;
+	gatts_value.p_value = encoded_hrm;
 
 	// Update database.
-	err_code = sd_ble_gatts_value_set(p_ppg->conn_handle,
-										p_ppg->ppg_raw_handles.value_handle,
-										&gatts_value);
-	if (err_code != NRF_SUCCESS)
-	{
-		return err_code;
-	}
+//	err_code = sd_ble_gatts_value_set(p_ppg->conn_handle,
+//										p_ppg->ppg_raw_handles.value_handle,
+//										&gatts_value);
+//	if (err_code != NRF_SUCCESS)
+//	{
+//		NRF_LOG_INFO("err_code: %d", err_code);
+//		return err_code;
+//	}
 	
 	// Send value if connected and notifying.
 	if ((p_ppg->conn_handle != BLE_CONN_HANDLE_INVALID)) 
@@ -125,13 +133,15 @@ uint32_t ble_ppg_raw_update(ble_ppg_t * p_ppg, uint8_t ppg_value){
 		hvx_params.type   = BLE_GATT_HVX_NOTIFICATION;
 		hvx_params.offset = gatts_value.offset;
 		hvx_params.p_len  = &gatts_value.len;
-		hvx_params.p_data = gatts_value.p_value;
+		hvx_params.p_data = encoded_hrm;//gatts_value.p_value;
 
 		err_code = sd_ble_gatts_hvx(p_ppg->conn_handle, &hvx_params);
+		NRF_LOG_INFO("ble_ppg_raw_update::err_code:%d", err_code);
 	}
 	else
 	{
 		err_code = NRF_ERROR_INVALID_STATE;
+		NRF_LOG_INFO("ble_ppg_raw_update::err_code:%d", err_code);
 	}
 
 	return err_code;
@@ -180,6 +190,7 @@ uint32_t ble_ppg_hrs_update(ble_ppg_t * p_ppg, uint8_t ppg_hrs){
 	else
 	{
 		err_code = NRF_ERROR_INVALID_STATE;
+		NRF_LOG_INFO("ble_ppg_hrs_update::err_code:%d", err_code);
 	}
 
 	return err_code;
@@ -228,6 +239,7 @@ uint32_t ble_ppg_spo2_update(ble_ppg_t * p_ppg, uint8_t ppg_spo2){
 	else
 	{
 		err_code = NRF_ERROR_INVALID_STATE;
+		NRF_LOG_INFO("ble_ppg_spo2_update::err_code:%d", err_code);
 	}
 
 	return err_code;
@@ -295,95 +307,95 @@ static uint32_t ppg_value_char_add(ble_ppg_t * p_ppg, const ble_ppg_init_t * p_p
                                                &p_ppg->ppg_raw_handles);
 	
 	//Setting PPG HRS Characteristic-----------------------------------------------------
-	memset(&ppg_hrs_cccd_md, 0, sizeof(ppg_hrs_cccd_md));
+//	memset(&ppg_hrs_cccd_md, 0, sizeof(ppg_hrs_cccd_md));
 
-    //  Read  operation on Cccd should be possible without authentication.
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&ppg_hrs_cccd_md.read_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&ppg_hrs_cccd_md.write_perm);
-    
-    ppg_hrs_cccd_md.vloc       = BLE_GATTS_VLOC_STACK;
-	
-	memset(&ppg_hrs_char_md, 0, sizeof(ppg_hrs_char_md));
+//    //  Read  operation on Cccd should be possible without authentication.
+//    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&ppg_hrs_cccd_md.read_perm);
+//    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&ppg_hrs_cccd_md.write_perm);
+//    
+//    ppg_hrs_cccd_md.vloc       = BLE_GATTS_VLOC_STACK;
+//	
+//	memset(&ppg_hrs_char_md, 0, sizeof(ppg_hrs_char_md));
 
-    ppg_hrs_char_md.char_props.read   = 0;
-    ppg_hrs_char_md.char_props.write  = 0;
-    ppg_hrs_char_md.char_props.notify = 1;
-    ppg_hrs_char_md.p_char_user_desc  = NULL;
-    ppg_hrs_char_md.p_char_pf         = NULL;
-    ppg_hrs_char_md.p_user_desc_md    = NULL;
-    ppg_hrs_char_md.p_cccd_md         = &ppg_hrs_cccd_md; 
-    ppg_hrs_char_md.p_sccd_md         = NULL;
-	
-	memset(&attr_md, 0, sizeof(attr_md));
+//    ppg_hrs_char_md.char_props.read   = 0;
+//    ppg_hrs_char_md.char_props.write  = 0;
+//    ppg_hrs_char_md.char_props.notify = 1;
+//    ppg_hrs_char_md.p_char_user_desc  = NULL;
+//    ppg_hrs_char_md.p_char_pf         = NULL;
+//    ppg_hrs_char_md.p_user_desc_md    = NULL;
+//    ppg_hrs_char_md.p_cccd_md         = &ppg_hrs_cccd_md; 
+//    ppg_hrs_char_md.p_sccd_md         = NULL;
+//	
+//	memset(&attr_md, 0, sizeof(attr_md));
 
-    attr_md.read_perm  = p_ppg_init->ppg_value_char_attr_md.read_perm;
-    attr_md.write_perm = p_ppg_init->ppg_value_char_attr_md.write_perm;
-    attr_md.vloc       = BLE_GATTS_VLOC_STACK;
-    attr_md.rd_auth    = 0;
-    attr_md.wr_auth    = 0;
-    attr_md.vlen       = 0;
-	
-	ble_uuid.type = p_ppg->uuid_type;
-    ble_uuid.uuid = PPG_HRS_CHAR_UUID;
-	
-	memset(&attr_char_ppg_hrs, 0, sizeof(attr_char_ppg_hrs));
+//    attr_md.read_perm  = p_ppg_init->ppg_value_char_attr_md.read_perm;
+//    attr_md.write_perm = p_ppg_init->ppg_value_char_attr_md.write_perm;
+//    attr_md.vloc       = BLE_GATTS_VLOC_STACK;
+//    attr_md.rd_auth    = 0;
+//    attr_md.wr_auth    = 0;
+//    attr_md.vlen       = 0;
+//	
+//	ble_uuid.type = p_ppg->uuid_type;
+//    ble_uuid.uuid = PPG_HRS_CHAR_UUID;
+//	
+//	memset(&attr_char_ppg_hrs, 0, sizeof(attr_char_ppg_hrs));
 
-    attr_char_ppg_hrs.p_uuid    = &ble_uuid;
-    attr_char_ppg_hrs.p_attr_md = &attr_md;
-    attr_char_ppg_hrs.init_len  = sizeof(uint8_t);
-    attr_char_ppg_hrs.init_offs = 0;
-    attr_char_ppg_hrs.max_len   = sizeof(uint8_t);
-	
-	//Add PPG HRS characteristic
-	err_code = sd_ble_gatts_characteristic_add(p_ppg->service_handle, &ppg_hrs_char_md,
-                                               &attr_char_ppg_hrs,
-                                               &p_ppg->ppg_hrs_handles);
+//    attr_char_ppg_hrs.p_uuid    = &ble_uuid;
+//    attr_char_ppg_hrs.p_attr_md = &attr_md;
+//    attr_char_ppg_hrs.init_len  = sizeof(uint8_t);
+//    attr_char_ppg_hrs.init_offs = 0;
+//    attr_char_ppg_hrs.max_len   = sizeof(uint8_t);
+//	
+//	//Add PPG HRS characteristic
+//	err_code = sd_ble_gatts_characteristic_add(p_ppg->service_handle, &ppg_hrs_char_md,
+//                                               &attr_char_ppg_hrs,
+//                                               &p_ppg->ppg_hrs_handles);
 	
 	
 	//Setting PPG SPO2 Characteristic-----------------------------------------------------
-	memset(&ppg_spo2_cccd_md, 0, sizeof(ppg_spo2_cccd_md));
+//	memset(&ppg_spo2_cccd_md, 0, sizeof(ppg_spo2_cccd_md));
 
-    //  Read  operation on Cccd should be possible without authentication.
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&ppg_spo2_cccd_md.read_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&ppg_spo2_cccd_md.write_perm);
-    
-    ppg_spo2_cccd_md.vloc       = BLE_GATTS_VLOC_STACK;
-	
-	memset(&ppg_spo2_char_md, 0, sizeof(ppg_spo2_char_md));
+//    //  Read  operation on Cccd should be possible without authentication.
+//    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&ppg_spo2_cccd_md.read_perm);
+//    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&ppg_spo2_cccd_md.write_perm);
+//    
+//    ppg_spo2_cccd_md.vloc       = BLE_GATTS_VLOC_STACK;
+//	
+//	memset(&ppg_spo2_char_md, 0, sizeof(ppg_spo2_char_md));
 
-    ppg_spo2_char_md.char_props.read   = 0;
-    ppg_spo2_char_md.char_props.write  = 0;
-    ppg_spo2_char_md.char_props.notify = 1; 
-    ppg_spo2_char_md.p_char_user_desc  = NULL;
-    ppg_spo2_char_md.p_char_pf         = NULL;
-    ppg_spo2_char_md.p_user_desc_md    = NULL;
-    ppg_spo2_char_md.p_cccd_md         = &ppg_spo2_cccd_md; 
-    ppg_spo2_char_md.p_sccd_md         = NULL;
-	
-	memset(&attr_md, 0, sizeof(attr_md));
+//    ppg_spo2_char_md.char_props.read   = 0;
+//    ppg_spo2_char_md.char_props.write  = 0;
+//    ppg_spo2_char_md.char_props.notify = 1; 
+//    ppg_spo2_char_md.p_char_user_desc  = NULL;
+//    ppg_spo2_char_md.p_char_pf         = NULL;
+//    ppg_spo2_char_md.p_user_desc_md    = NULL;
+//    ppg_spo2_char_md.p_cccd_md         = &ppg_spo2_cccd_md; 
+//    ppg_spo2_char_md.p_sccd_md         = NULL;
+//	
+//	memset(&attr_md, 0, sizeof(attr_md));
 
-    attr_md.read_perm  = p_ppg_init->ppg_value_char_attr_md.read_perm;
-    attr_md.write_perm = p_ppg_init->ppg_value_char_attr_md.write_perm;
-    attr_md.vloc       = BLE_GATTS_VLOC_STACK;
-    attr_md.rd_auth    = 0;
-    attr_md.wr_auth    = 0;
-    attr_md.vlen       = 0;
-	
-	ble_uuid.type = p_ppg->uuid_type;
-    ble_uuid.uuid = PPG_SPO2_CHAR_UUID;
-	
-	memset(&attr_char_ppg_spo2, 0, sizeof(attr_char_ppg_spo2));
+//    attr_md.read_perm  = p_ppg_init->ppg_value_char_attr_md.read_perm;
+//    attr_md.write_perm = p_ppg_init->ppg_value_char_attr_md.write_perm;
+//    attr_md.vloc       = BLE_GATTS_VLOC_STACK;
+//    attr_md.rd_auth    = 0;
+//    attr_md.wr_auth    = 0;
+//    attr_md.vlen       = 0;
+//	
+//	ble_uuid.type = p_ppg->uuid_type;
+//    ble_uuid.uuid = PPG_SPO2_CHAR_UUID;
+//	
+//	memset(&attr_char_ppg_spo2, 0, sizeof(attr_char_ppg_spo2));
 
-    attr_char_ppg_spo2.p_uuid    = &ble_uuid;
-    attr_char_ppg_spo2.p_attr_md = &attr_md;
-    attr_char_ppg_spo2.init_len  = sizeof(uint8_t);
-    attr_char_ppg_spo2.init_offs = 0;
-    attr_char_ppg_spo2.max_len   = sizeof(uint8_t);
-	
-	//Add PPG SPO2 characteristic
-	err_code = sd_ble_gatts_characteristic_add(p_ppg->service_handle, &ppg_spo2_char_md,
-                                               &attr_char_ppg_spo2,
-                                               &p_ppg->ppg_spo2_handles);
+//    attr_char_ppg_spo2.p_uuid    = &ble_uuid;
+//    attr_char_ppg_spo2.p_attr_md = &attr_md;
+//    attr_char_ppg_spo2.init_len  = sizeof(uint8_t);
+//    attr_char_ppg_spo2.init_offs = 0;
+//    attr_char_ppg_spo2.max_len   = sizeof(uint8_t);
+//	
+//	//Add PPG SPO2 characteristic
+//	err_code = sd_ble_gatts_characteristic_add(p_ppg->service_handle, &ppg_spo2_char_md,
+//                                               &attr_char_ppg_spo2,
+//                                               &p_ppg->ppg_spo2_handles);
     if (err_code != NRF_SUCCESS)
     {
         return err_code;

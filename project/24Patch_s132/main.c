@@ -1,50 +1,3 @@
-/**
- * Copyright (c) 2014 - 2018, Nordic Semiconductor ASA
- *
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form, except as embedded into a Nordic
- *    Semiconductor ASA integrated circuit in a product or a software update for
- *    such product, must reproduce the above copyright notice, this list of
- *    conditions and the following disclaimer in the documentation and/or other
- *    materials provided with the distribution.
- *
- * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
- *    contributors may be used to endorse or promote products derived from this
- *    software without specific prior written permission.
- *
- * 4. This software, with or without modification, must only be used with a
- *    Nordic Semiconductor ASA integrated circuit.
- *
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- *
- * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- */
-/** @example examples/ble_peripheral/ble_app_hrs/main.c
- *
- * @brief Heart Rate Service Sample Application main file.
- *
- * This file contains the source code for a sample application using the Heart Rate service
- * (and also Battery and Device Information services). This application uses the
- * @ref srvlib_conn_params module.
- */
 
 #include <stdint.h>
 #include <string.h>
@@ -84,6 +37,13 @@
 //include ppg service 
 #include "ble_ppg.h"
 
+//max30102 i2c
+#include "nrf_drv_twi.h"
+#include "nrf_delay.h"
+
+#include "heartRate.h"
+#include "spo2_algorithm.h"
+
 
 #define DEVICE_NAME                         "24Patch"                            /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME                   "Signalus"                   /**< Manufacturer. Will be passed to Device Information Service. */
@@ -93,12 +53,12 @@
 #define APP_BLE_CONN_CFG_TAG                1                                       /**< A tag identifying the SoftDevice BLE configuration. */
 #define APP_BLE_OBSERVER_PRIO               3                                       /**< Application's BLE observer priority. You shouldn't need to modify this value. */
 
-#define PPG_RAW_INTERVAL           			APP_TIMER_TICKS(1000)
+#define PPG_RAW_INTERVAL           			APP_TIMER_TICKS(20)
 #define PPG_HRS_INTERVAL           			APP_TIMER_TICKS(1000)
 #define PPG_SPO2_INTERVAL          			APP_TIMER_TICKS(1000)
 
-#define MIN_CONN_INTERVAL                   MSEC_TO_UNITS(400, UNIT_1_25_MS)        /**< Minimum acceptable connection interval (0.4 seconds). */
-#define MAX_CONN_INTERVAL                   MSEC_TO_UNITS(650, UNIT_1_25_MS)        /**< Maximum acceptable connection interval (0.65 second). */
+#define MIN_CONN_INTERVAL                   MSEC_TO_UNITS(10, UNIT_1_25_MS)        /**< Minimum acceptable connection interval (0.4 seconds). */
+#define MAX_CONN_INTERVAL                   MSEC_TO_UNITS(30, UNIT_1_25_MS)        /**< Maximum acceptable connection interval (0.65 second). */
 #define SLAVE_LATENCY                       0                                       /**< Slave latency. */
 #define CONN_SUP_TIMEOUT                    MSEC_TO_UNITS(4000, UNIT_10_MS)         /**< Connection supervisory timeout (4 seconds). */
 
@@ -110,7 +70,7 @@
 
 #define SEC_PARAM_BOND                      1                                       /**< Perform bonding. */
 #define SEC_PARAM_MITM                      0                                       /**< Man In The Middle protection not required. */
-#define SEC_PARAM_LESC                      1                                       /**< LE Secure Connections enabled. */
+#define SEC_PARAM_LESC                      0                                       /**< LE Secure Connections enabled. */
 #define SEC_PARAM_KEYPRESS                  0                                       /**< Keypress notifications not enabled. */
 #define SEC_PARAM_IO_CAPABILITIES           BLE_GAP_IO_CAPS_NONE                    /**< No I/O capabilities. */
 #define SEC_PARAM_OOB                       0                                       /**< Out Of Band data not available. */
@@ -118,6 +78,39 @@
 #define SEC_PARAM_MAX_KEY_SIZE              16                                      /**< Maximum encryption key size. */
 
 #define DEAD_BEEF                           0xDEADBEEF                              /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
+
+//max30102 define
+#define TWI_INSTANCE_ID     0				/* TWI instance ID. 180821*/
+
+/* Common addresses definition for MAX30102 */
+#define MAX30102_ADDR 0x57
+
+/* MAX30102 register addresses */
+#define REG_INTR_STATUS_1 0x00
+#define REG_INTR_STATUS_2 0x01
+#define REG_INTR_ENABLE_1 0x02
+#define REG_INTR_ENABLE_2 0x03
+#define REG_FIFO_WR_PTR 0x04
+#define REG_OVF_COUNTER 0x05
+#define REG_FIFO_RD_PTR 0x06
+#define REG_FIFO_DATA 0x07
+#define REG_FIFO_CONFIG 0x08
+#define REG_MODE_CONFIG 0x09
+#define REG_SPO2_CONFIG 0x0A
+#define REG_LED1_PA 0x0C
+#define REG_LED2_PA 0x0D
+#define REG_PILOT_PA 0x10
+#define REG_MULTI_LED_CTRL1 0x11
+#define REG_MULTI_LED_CTRL2 0x12
+#define REG_TEMP_INTR 0x1F
+#define REG_TEMP_FRAC 0x20
+#define REG_TEMP_CONFIG 0x21
+#define REG_PROX_INT_THRESH 0x30
+#define REG_REV_ID 0xFE
+#define REG_PART_ID 0xFF
+
+//gpio pin config
+#define PPG_INT 0
 
 //define ppg service instance
 BLE_PPG_DEF(m_ppg);
@@ -137,9 +130,42 @@ static ble_uuid_t m_adv_uuids[] =                                   /**< Univers
 	{PPG_SERVICE_UUID, BLE_UUID_TYPE_VENDOR_BEGIN}
 };
 
-static uint8_t m_ppg_raw = 0;
+static uint32_t m_ppg_raw = 0;
 static uint8_t m_ppg_hrs = 0;
 static uint8_t m_ppg_spo2 = 0;
+
+//max30102 variable
+static const nrf_drv_twi_t m_twi = NRF_DRV_TWI_INSTANCE(TWI_INSTANCE_ID);
+
+static uint8_t m_sample; 					/* Buffer for samples read from resistor. 180821*/
+static uint8_t m_sample_FIFO[6]; 	/* Buffer for samples read from FIFO resistor. 180821*/
+
+static volatile bool m_xfer_done = false; /* Indicates if operation on TWI has ended. 180821*/
+
+static uint32_t RED_LED = 0; /* RES LED value 180821*/
+static uint32_t IR_LED = 0; /* RES IR value 180821*/
+
+//PBA Algorithm
+static const uint8_t RATE_SIZE = 4; //Increase this for more averaging. 4 is good.
+static uint8_t rates[RATE_SIZE]; //Array of heart rates
+static uint8_t rateSpot = 0;
+static uint32_t lastBeat = 0; //Time at which the last beat occurred
+static float beatsPerMinute;
+static int beatAvg;
+static uint16_t dataPPG_test[7] = {117, 111, 278, 248, 184, 97, 92};
+static uint8_t dataPPG_count = 0;
+extern int16_t IR_AC_Signal_Current;
+
+//spo2 Algorithm
+static uint32_t irBuffer[100]; //infrared LED sensor data
+static uint32_t redBuffer[100];  //red LED sensor data
+
+static int32_t bufferLength; //data length
+static int32_t spo2; //SPO2 value
+static int8_t validSPO2; //indicator to show if the SPO2 calculation is valid
+static int32_t heartRate; //heart rate value
+static int8_t validHeartRate; //indicator to show if the heart rate calculation is valid
+
 
 static void on_ppg_evt(ble_ppg_t * p_ppg_service, ble_ppg_evt_t * p_evt)
 {
@@ -194,10 +220,11 @@ static void ppg_raw_timeout_handler(void * p_context)
     UNUSED_PARAMETER(p_context);
     ret_code_t err_code;
     
-    // Increment the value of m_custom_value before nortifing it.
-    m_ppg_raw++;
-    
+    m_ppg_raw = IR_LED;
+	
+	NRF_LOG_INFO("ppg_raw_timeout_handler after");
     err_code = ble_ppg_raw_update(&m_ppg, m_ppg_raw);
+	NRF_LOG_INFO("ppg_raw_timeout_handler before: %d", err_code);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -225,17 +252,6 @@ static void ppg_spo2_timeout_handler(void * p_context)
     APP_ERROR_CHECK(err_code);
 }
 
-/**@brief Callback function for asserts in the SoftDevice.
- *
- * @details This function will be called in case of an assert in the SoftDevice.
- *
- * @warning This handler is an example only and does not fit a final product. You need to analyze
- *          how your product is supposed to react in case of Assert.
- * @warning On assert from the SoftDevice, the system can only recover on reset.
- *
- * @param[in] line_num   Line number of the failing ASSERT call.
- * @param[in] file_name  File name of the failing ASSERT call.
- */
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 {
     app_error_handler(DEAD_BEEF, line_num, p_file_name);
@@ -271,13 +287,10 @@ void advertising_start(bool erase_bonds)
         err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
         APP_ERROR_CHECK(err_code);
     }
+	NRF_LOG_INFO("advertising start");
 }
 
 
-/**@brief Function for handling Peer Manager events.
- *
- * @param[in] p_evt  Peer Manager event.
- */
 static void pm_evt_handler(pm_evt_t const * p_evt)
 {
     pm_handler_on_pm_evt(p_evt);
@@ -295,10 +308,6 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
 }
 
 
-/**@brief Function for the Timer initialization.
- *
- * @details Initializes the timer module. This creates and starts application timers.
- */
 static void timers_init(void)
 {
     ret_code_t err_code;
@@ -315,14 +324,10 @@ static void timers_init(void)
 	
 	err_code = app_timer_create(&m_ppg_spo2_timer_id, APP_TIMER_MODE_REPEATED, ppg_spo2_timeout_handler);
     APP_ERROR_CHECK(err_code);
+	NRF_LOG_INFO("timers_init");
 }
 
 
-/**@brief Function for the GAP initialization.
- *
- * @details This function sets up all the necessary GAP (Generic Access Profile) parameters of the
- *          device including the device name, appearance, and the preferred connection parameters.
- */
 static void gap_params_init(void)
 {
     ret_code_t              err_code;
@@ -345,6 +350,7 @@ static void gap_params_init(void)
 
     err_code = sd_ble_gap_ppcp_set(&gap_conn_params);
     APP_ERROR_CHECK(err_code);
+	NRF_LOG_INFO("gap_params_init");
 }
 
 /**@brief Function for initializing the GATT module.
@@ -353,26 +359,16 @@ static void gatt_init(void)
 {
 	ret_code_t err_code = nrf_ble_gatt_init(&m_gatt, NULL);
     APP_ERROR_CHECK(err_code);
+	NRF_LOG_INFO("gatt_init");
 }
 
 
-/**@brief Function for handling Queued Write Module errors.
- *
- * @details A pointer to this function will be passed to each service which may need to inform the
- *          application about an error.
- *
- * @param[in]   nrf_error   Error code containing information about what went wrong.
- */
 static void nrf_qwr_error_handler(uint32_t nrf_error)
 {
     APP_ERROR_HANDLER(nrf_error);
 }
 
 
-/**@brief Function for initializing services that will be used by the application.
- *
- * @details Initialize the Heart Rate, Battery and Device Information services.
- */
 static void services_init(void)
 {
     ret_code_t 		err_code;
@@ -392,6 +388,7 @@ static void services_init(void)
 	
 	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&ppg_init.ppg_value_char_attr_md.read_perm);
 	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&ppg_init.ppg_value_char_attr_md.write_perm);
+	NRF_LOG_INFO("services_init");
 }
 
 /**@brief Function for starting application timers.
@@ -412,19 +409,10 @@ static void application_timers_start(void)
 
 //    err_code = app_timer_start(m_sensor_contact_timer_id, SENSOR_CONTACT_DETECTED_INTERVAL, NULL);
 //    APP_ERROR_CHECK(err_code);
+	NRF_LOG_INFO("application timer start");
 }
 
 
-/**@brief Function for handling the Connection Parameters Module.
- *
- * @details This function will be called for all events in the Connection Parameters Module which
- *          are passed to the application.
- *          @note All this function does is to disconnect. This could have been done by simply
- *                setting the disconnect_on_fail config parameter, but instead we use the event
- *                handler mechanism to demonstrate its use.
- *
- * @param[in] p_evt  Event received from the Connection Parameters Module.
- */
 static void on_conn_params_evt(ble_conn_params_evt_t * p_evt)
 {
     ret_code_t err_code;
@@ -437,18 +425,12 @@ static void on_conn_params_evt(ble_conn_params_evt_t * p_evt)
 }
 
 
-/**@brief Function for handling a Connection Parameters error.
- *
- * @param[in] nrf_error  Error code containing information about what went wrong.
- */
 static void conn_params_error_handler(uint32_t nrf_error)
 {
     APP_ERROR_HANDLER(nrf_error);
 }
 
 
-/**@brief Function for initializing the Connection Parameters module.
- */
 static void conn_params_init(void)
 {
     ret_code_t             err_code;
@@ -467,13 +449,10 @@ static void conn_params_init(void)
 
     err_code = ble_conn_params_init(&cp_init);
     APP_ERROR_CHECK(err_code);
+	NRF_LOG_INFO("conn_params_init");
 }
 
 
-/**@brief Function for putting the chip into sleep mode.
- *
- * @note This function will not return.
- */
 static void sleep_mode_enter(void)
 {
     ret_code_t err_code;
@@ -484,12 +463,6 @@ static void sleep_mode_enter(void)
 }
 
 
-/**@brief Function for handling advertising events.
- *
- * @details This function will be called for advertising events which are passed to the application.
- *
- * @param[in] ble_adv_evt  Advertising event.
- */
 static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 {
     ret_code_t err_code;
@@ -510,11 +483,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 }
 
 
-/**@brief Function for handling BLE events.
- *
- * @param[in]   p_ble_evt   Bluetooth stack event.
- * @param[in]   p_context   Unused.
- */
+
 static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
 {
     ret_code_t err_code;
@@ -592,10 +561,6 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
 }
 
 
-/**@brief Function for initializing the BLE stack.
- *
- * @details Initializes the SoftDevice and the BLE event interrupt.
- */
 static void ble_stack_init(void)
 {
     ret_code_t err_code;
@@ -615,11 +580,10 @@ static void ble_stack_init(void)
 
     // Register a handler for BLE events.
     NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
+	NRF_LOG_INFO("ble_stack_init");
 }
 
 
-/**@brief Function for the Peer Manager initialization.
- */
 static void peer_manager_init(void)
 {
     ble_gap_sec_params_t sec_param;
@@ -649,11 +613,10 @@ static void peer_manager_init(void)
 
     err_code = pm_register(pm_evt_handler);
     APP_ERROR_CHECK(err_code);
+	NRF_LOG_INFO("peer_manager_init");
 }
 
 
-/**@brief Function for initializing the Advertising functionality.
- */
 static void advertising_init(void)
 {
     ret_code_t             err_code;
@@ -664,8 +627,8 @@ static void advertising_init(void)
     init.advdata.name_type               = BLE_ADVDATA_FULL_NAME;
     init.advdata.include_appearance      = false;
     init.advdata.flags                   = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
-    init.advdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
-    init.advdata.uuids_complete.p_uuids  = m_adv_uuids;
+    init.srdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
+    init.srdata.uuids_complete.p_uuids  = m_adv_uuids;
 
     init.config.ble_adv_fast_enabled  = true;
     init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
@@ -677,17 +640,17 @@ static void advertising_init(void)
     APP_ERROR_CHECK(err_code);
 
     ble_advertising_conn_cfg_tag_set(&m_advertising, APP_BLE_CONN_CFG_TAG);
+	NRF_LOG_INFO("advertising_init");
 }
 
 
-/**@brief Function for initializing the nrf log module.
- */
 static void log_init(void)
 {
     ret_code_t err_code = NRF_LOG_INIT(NULL);
     APP_ERROR_CHECK(err_code);
 
     NRF_LOG_DEFAULT_BACKENDS_INIT();
+	NRF_LOG_INFO("log_init");
 }
 
 
@@ -698,7 +661,57 @@ static void power_management_init(void)
     ret_code_t err_code;
     err_code = nrf_pwr_mgmt_init();
     APP_ERROR_CHECK(err_code);
+	NRF_LOG_INFO("power_management_init");
 }
+
+__STATIC_INLINE void data_handler(uint8_t *temp)
+{
+	int i;
+	RED_LED = 0;
+	IR_LED = 0;
+	
+//		if(dataPPG_count > 99)
+//		{
+//				dataPPG_count = 0;
+//		}
+	//0x00 0x00 0x00 0x00 0x00 0x00 |
+	for(i = 0; i < 2; i++)
+		RED_LED = (RED_LED | temp[i]) << 8;
+	RED_LED = (RED_LED | temp[i]);
+	//redBuffer[dataPPG_count] = RED_LED;
+	
+	for(i = 3; i < 5; i++)
+		IR_LED = (IR_LED | temp[i]) << 8;
+	IR_LED = (IR_LED | temp[i]);
+	//irBuffer[dataPPG_count] = IR_LED;
+
+	//dataPPG_count++;
+	
+	//NRF_LOG_INFO("data_handler[RED]: %d ", RED_LED);
+	//NRF_LOG_INFO("data_handler[IR]: %d ", IR_LED);
+	//NRF_LOG_INFO("data_handler[millis]: %d ", millis());
+
+	//Logging each bytes of FIFO
+	//for(i =0; i < 6; i++)	
+	//	NRF_LOG_INFO("data_handler[%d]: %d ",i, temp[i]);
+}
+
+void twi_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
+{
+    switch (p_event->type)
+    {
+        case NRF_DRV_TWI_EVT_DONE:
+            if (p_event->xfer_desc.type == NRF_DRV_TWI_XFER_RX)
+            {
+                data_handler(m_sample_FIFO);
+            }
+            m_xfer_done = true;
+            break;
+        default:
+            break;
+    }
+}
+
 
 /**@brief Function for handling the idle state (main loop).
  *
@@ -715,6 +728,95 @@ static void idle_state_handle(void)
     {
         nrf_pwr_mgmt_run();
     }
+}
+
+static void twi_init(void)
+{
+	ret_code_t err_code;
+
+    const nrf_drv_twi_config_t twi_max30102_config = {
+       .scl                = ARDUINO_SCL_PIN,
+       .sda                = ARDUINO_SDA_PIN,
+       .frequency          = NRF_DRV_TWI_FREQ_100K,
+       .interrupt_priority = APP_IRQ_PRIORITY_HIGH,
+       .clear_bus_init     = false
+    };
+
+    err_code = nrf_drv_twi_init(&m_twi, &twi_max30102_config, twi_handler, NULL);
+    APP_ERROR_CHECK(err_code);
+
+    nrf_drv_twi_enable(&m_twi);
+	NRF_LOG_INFO("twi_init");
+}
+
+static bool writeRegister(uint8_t regNumber, uint8_t value){
+	uint8_t valueBuffer[2];
+	valueBuffer[0] = regNumber;
+	valueBuffer[1] = value;
+	//int32_t toSend = (int32_t)value;
+	uint32_t err_code = nrf_drv_twi_tx(&m_twi, MAX30102_ADDR, valueBuffer, sizeof(valueBuffer), false);
+	nrf_delay_ms(10);
+	return true;
+}
+
+static uint8_t readRegister(uint8_t regNumber){
+	m_xfer_done = false;
+
+	//uint8_t resultsWhoAmI;
+	uint8_t whoAmIPointer = regNumber;
+	nrf_drv_twi_tx(&m_twi, MAX30102_ADDR, &whoAmIPointer, 1, true);
+	nrf_delay_ms(10);
+	nrf_drv_twi_rx(&m_twi, MAX30102_ADDR, &m_sample, 1);
+	nrf_delay_ms(10);
+	NRF_LOG_INFO("TWI 0x%x: 0x%x.", regNumber, m_sample);
+	return m_sample;
+}
+
+
+static uint8_t readRegister_FIFO(uint8_t regNumber){
+	m_xfer_done = false;
+
+	//uint8_t resultsWhoAmI;
+	uint8_t whoAmIPointer = regNumber;
+	nrf_drv_twi_tx(&m_twi, MAX30102_ADDR, &whoAmIPointer, 1, true);
+	nrf_delay_ms(10);
+	nrf_drv_twi_rx(&m_twi, MAX30102_ADDR, m_sample_FIFO, 1);
+	nrf_delay_ms(10);
+	NRF_LOG_INFO("TWI 0x%x: 0x%x.", regNumber, m_sample_FIFO);
+	
+	return 1;
+}
+
+
+static void max30102_init(void)
+{
+	writeRegister(REG_MODE_CONFIG, 0x40);//reset
+	
+	writeRegister(REG_INTR_ENABLE_1, 0xc0);// INTR setting [0x02 1100 0000] A_FULL_EN, PPG_RDY_EN
+	writeRegister(REG_INTR_ENABLE_2, 0x00);
+	writeRegister(REG_FIFO_WR_PTR, 0x00);//FIFO_WR_PTR[4:0] 0x04
+	writeRegister(REG_OVF_COUNTER, 0x00);//OVF_COUNTER[4:0] 0x05
+	writeRegister(REG_FIFO_RD_PTR, 0x00);//FIFO_RD_PTR[4:0] 0x06
+	writeRegister(REG_FIFO_CONFIG, 0x0f);//sample avg = 1, fifo rollover=false, fifo almost full = 17 [0x08 0000 1111] 
+	writeRegister(REG_MODE_CONFIG, 0x03);//0x02 for Red only, 0x03 for SpO2 mode 0x07 multimode LED [0x09 0000 0011]
+	writeRegister(REG_SPO2_CONFIG, 0x27);// SPO2_ADC range = 4096nA, SPO2 sample rate (100 Hz), LED pulseWidth (400uS)  [0x0A 0010 0111]
+	writeRegister(REG_LED1_PA, 0x24);//Choose value for ~ 7mA for LED1 [0x0C 0010 0100]
+	writeRegister(REG_LED2_PA, 0x24);// Choose value for ~ 7mA for LED2 [0x0D 0010 0100]
+	writeRegister(REG_PILOT_PA, 0x7f);// Choose value for ~ 25mA for Pilot LED [0x10 0111 1111]
+
+	readRegister(REG_INTR_STATUS_1);
+	readRegister(REG_INTR_STATUS_2);
+	readRegister_FIFO(REG_FIFO_DATA);
+	NRF_LOG_INFO("max30102_init");
+}
+
+static void read_max_data()
+{
+    m_xfer_done = false;
+
+    /* Read 1 byte from the specified address - skip 3 bits dedicated for fractional part of temperature. */
+    ret_code_t err_code = nrf_drv_twi_rx(&m_twi, MAX30102_ADDR, m_sample_FIFO, 6);
+    APP_ERROR_CHECK(err_code);
 }
 
 
@@ -735,6 +837,9 @@ int main(void)
 	advertising_init();
     conn_params_init();
     peer_manager_init();
+	
+	twi_init();//nrf_drv_twi_init(), nrf_drv_twi_enable()
+	max30102_init(); //init max30102 resistor
 
     // Start execution.
     NRF_LOG_INFO("24Patch v1.0.0 started.");
@@ -744,8 +849,84 @@ int main(void)
     // Enter main loop.
     for (;;)
     {
-        idle_state_handle();
+		nrf_delay_ms(20);
+		
+		do
+		{
+			idle_state_handle();
+		}while (m_xfer_done == false);
+				
+		read_max_data();
+				
+		//calHR();
+
+//		NRF_LOG_INFO("IR_LED : %d", IR_LED);
+//		NRF_LOG_INFO("Heart Rate : %d", beatsPerMinute);
+//		NRF_LOG_INFO("Heart Rate Average : %d", beatAvg);
+				
+        NRF_LOG_FLUSH();
     }
+	
+	// Enter main loop.
+    //for (uint8_t i = 0; i < 100; i++)
+//	for (dataPPG_count = 0; dataPPG_count < 100; dataPPG_count++)
+//    {
+//		nrf_delay_ms(100);
+
+//        do
+//		{
+//			idle_state_handle();
+//		}while (m_xfer_done == false);
+//			
+//		read_max_data();
+//		
+//		//calHR();
+//		NRF_LOG_INFO("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+//        NRF_LOG_FLUSH();
+//    }
+		
+	maxim_heart_rate_and_oxygen_saturation(irBuffer, bufferLength, redBuffer, &spo2, &validSPO2, &heartRate, &validHeartRate);
+		
+	while(1)
+	{
+		for(uint8_t i = 25; i < 100; i++)
+		{
+			redBuffer[i - 25] = redBuffer[i];
+			irBuffer[i - 25] = irBuffer[i];
+		}
+		
+		//dataPPG_count = 75;
+		//for(uint8_t i = 75; i < 100; i++)
+		for(dataPPG_count = 75; dataPPG_count < 100; dataPPG_count++)
+		{
+			nrf_delay_ms(100);
+		
+			do
+			{
+				idle_state_handle();
+			}while (m_xfer_done == false);
+		
+			read_max_data();
+			
+			//calHR();
+			
+			//NRF_LOG_INFO("red: %d", redBuffer[i]);
+			//NRF_LOG_INFO("ir: %d", irBuffer[i]);
+			NRF_LOG_INFO("HR: %d", heartRate);
+			NRF_LOG_INFO("HRvalid: %d", validHeartRate);
+			
+			NRF_LOG_INFO("dataPPG_count: %d", dataPPG_count);
+			NRF_LOG_INFO("SPO2: %d", spo2);
+			NRF_LOG_INFO("SPO2valid: %d", validSPO2);
+			//NRF_LOG_INFO("PPG_INT : %d", drv_gpio_inpin_get(PPG_INT, &PPG_INT_value));
+			
+			NRF_LOG_FLUSH();
+		}
+		
+		maxim_heart_rate_and_oxygen_saturation(irBuffer, bufferLength, redBuffer, &spo2, &validSPO2, &heartRate, &validHeartRate);
+		
+
+	}
 }
 
 

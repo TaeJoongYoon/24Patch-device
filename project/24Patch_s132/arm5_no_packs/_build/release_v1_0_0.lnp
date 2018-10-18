@@ -1,5 +1,7 @@
 --cpu=Cortex-M4.fp
 ".\_build\main.o"
+".\_build\heartrate.o"
+".\_build\spo2_algorithm.o"
 ".\_build\boards.o"
 ".\_build\bsp.o"
 ".\_build\bsp_btn_ble.o"
@@ -65,6 +67,9 @@
 ".\_build\nrfx_rng.o"
 ".\_build\nrfx_uart.o"
 ".\_build\nrfx_uarte.o"
+".\_build\nrf_drv_twi.o"
+".\_build\nrfx_twi.o"
+".\_build\nrfx_twim.o"
 ".\_build\app_button.o"
 ".\_build\app_error.o"
 ".\_build\app_error_handler_keil.o"
