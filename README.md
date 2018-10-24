@@ -1,4 +1,4 @@
 # 24Patch
-SWMaetro Project - team. Signalus
+SWMaestro Project - team. Signalus
 
 Developing..
